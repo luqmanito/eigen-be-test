@@ -1,0 +1,230 @@
+# Default values for service.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 2
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+
+image:
+  repository: 518200711443.dkr.ecr.ap-southeast-1.amazonaws.com/db-inventory-service
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ''
+
+# imagePullSecrets: [name: ecr-key]
+
+nameOverride: ''
+fullnameOverride: 'db-inventory'
+labels:
+  app: ''
+  name: ''
+  role: http
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ''
+
+podAnnotations:
+  vault.security.banzaicloud.io/vault-addr: https://vault.ganeshaoperationexpert.com
+  vault.security.banzaicloud.io/vault-path: kubernetes
+  vault.security.banzaicloud.io/vault-role: default
+  vault.security.banzaicloud.io/vault-skip-verify: 'true'
+  vault.security.banzaicloud.io/vault-tls-secret: vault-tls
+
+podSecurityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+securityContext:
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  privileged: false
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+  capabilities:
+    drop:
+    - ALL
+
+container:
+  ports:
+  - name: http
+    containerPort: 4080
+    protocol: TCP
+
+# lifecycle: {}
+lifecycle:
+  preStop:
+    exec:
+      command:
+      - sh
+      - -c
+      - echo "Stopping container now...">/proc/1/fd/1 && db-inventory -s stop
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: http
+  protocol: TCP
+  name: http
+
+ingress:
+  enabled: false
+  className: ''
+  annotations: {}
+  # kubernetes.io/ingress.class: nginx
+  # kubernetes.io/tls-acme: "true"
+  hosts:
+  # - host: api-superapps.ganeshaoperationexpert.com
+  #   paths:
+  #     - path: /
+  #       pathType: ImplementationSpecific
+  tls:
+  # - secretName: wc-tls
+  #   hosts:
+  #   - api-superapps.ganeshaoperationexpert.com
+
+resources:
+  limits:
+    cpu: 800m
+    memory: 1200Mi
+  requests:
+    cpu: 300m
+    memory: 500Mi
+
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 90
+
+verticalautoscaling:
+  enabled: true
+  min:
+    cpu: 300m
+    memory: 500Mi
+  max:
+    cpu: 800m
+    memory: 1200Mi
+
+podDisruptionBudget:
+  enabled: true
+  maxUnavailable: 1
+
+nodeSelector:
+  enabled: true
+  select:
+    eks.amazonaws.com/nodegroup: ng_db
+
+tolerations:
+- key: db
+  operator: Equal
+  value: 'true'
+
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+    - labelSelector:
+        matchExpressions:
+        - key: app
+          operator: In
+          values:
+          - db-inventory
+      topologyKey: 'kubernetes.io/hostname'
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app
+            operator: In
+            values:
+            - db-inventory
+        topologyKey: 'topology.kubernetes.io/zone'
+
+probes:
+  livenessProbe:
+    httpGet:
+      path: /api/v1/health
+      port: http
+    failureThreshold: 3
+    periodSeconds: 10
+    initialDelaySeconds: 5
+    timeoutSeconds: 10
+  readinessProbe:
+    httpGet:
+      path: /api/v1/health
+      port: http
+    failureThreshold: 3
+    periodSeconds: 10
+    initialDelaySeconds: 5
+    timeoutSeconds: 10
+
+# specVolumes:
+# - name: config
+#   secret:
+#     secretName: db-inventory
+env:
+- name: BASE_URL
+  valueFrom:
+    fieldRef:
+      fieldPath: status.podIP
+- name: SERVICE_NAME
+  valueFrom:
+    fieldRef:
+      fieldPath: metadata.labels['name']
+
+envFrom:
+- configMapRef:
+    name: db-inventory
+
+configMap:
+  enabled: true
+  name: db-inventory
+  data:
+    DATABASE_URL: vault:secrets/data/config/db_url#DB_INVENTORY
+    SVC_DB_GO: vault:secrets/data/config/service_url#SVC_DB_GO
+    PORT: '4080'
+
+secret:
+  enabled: false
+  name: db-inventory
+  data:
+
+# volumeMounts:
+# - mountPath: /app/.env
+#   name: config
+#   subPath: env
+
+gateway:
+  namespace: istio-ingress
+  enabled: true
+  hosts: []
+
+virtualService:
+  enabled: true
+  gateways:
+  - istio-ingress/db-inventory-gw
+  hosts: []
+  http:
+  - route:
+    - destination:
+        host: db-inventory
+        port:
+          number: 80

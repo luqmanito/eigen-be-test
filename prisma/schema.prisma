@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model barang {
+  id                Int            @id(map: "barang_pk") @default(autoincrement())
+  nama_barang       String         @db.VarChar
+  id_kategori       Int
+  harga_barang      Float          @db.Real
+  merk              String?        @db.VarChar
+  vendor            String?        @db.VarChar
+  status            String?        @default("Aktif") @db.VarChar
+  spesifikasi       String?        @db.VarChar
+  tanggal_pengadaan DateTime       @db.Date
+  jenis_pengadaan   pengadaan_type
+  tipe_barang       String?
+  kategori          kategori       @relation(fields: [id_kategori], references: [id], onDelete: Cascade, map: "barang_kategori_fk")
+  enrollment        enrollment[]
+  mutasi            mutasi[]
+}
+
+model kategori {
+  id            Int      @id(map: "kategori_pk") @default(autoincrement())
+  nama_kategori String   @db.VarChar
+  status        String   @default("Aktif") @db.VarChar
+  barang        barang[]
+}
+
+model enrollment {
+  id             Int            @id(map: "enrollment_id") @default(autoincrement())
+  id_barang      Int
+  id_gedung      Int?
+  id_ruang       String?        @db.VarChar(255)
+  kondisi        String?        @db.VarChar
+  tanggal_input  DateTime?      @default(now()) @db.Date
+  status         String         @default("Aktif") @db.VarChar
+  id_cabang      Int?
+  jenis_pengguna pengguna_type?
+  nik_pengguna   String?
+  barang         barang         @relation(fields: [id_barang], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "barang_enrollment_fk")
+}
+
+model ruangan {
+  id              String          @id @default(dbgenerated("nextval('ruangan_id_seq'::regclass)")) @db.VarChar(255)
+  nama_ruang      String          @db.VarChar(255)
+  id_jenis_ruang  Int?
+  id_gedung       Int?
+  id_lantai       Int?
+  id_fungsi_ruang Int?
+  jenis_ruangan   jenis_ruangan?  @relation(fields: [id_jenis_ruang], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "jenis_ruangan_fk")
+  lantai          lantai?         @relation(fields: [id_lantai], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "lantai_enrollment_fk")
+  fungsi_ruangan  fungsi_ruangan? @relation(fields: [id_fungsi_ruang], references: [id], onDelete: Cascade, map: "ruangan_fungsi_ruangan_fk")
+}
+
+model lantai {
+  id          Int       @id @default(autoincrement())
+  nama_lantai String    @db.VarChar(255)
+  keterangan  String?   @db.VarChar(255)
+  ruangan     ruangan[]
+}
+
+model jenis_ruangan {
+  id            Int       @id @default(autoincrement())
+  jenis_ruangan String    @db.VarChar(255)
+  keterangan    String?   @db.VarChar(255)
+  ruangan       ruangan[]
+}
+
+model mutasi {
+  id                Int           @id(map: "mutasi_id") @default(autoincrement())
+  type              mutation_type
+  id_gedung_asal    Int
+  id_gedung_tujuan  Int
+  id_dokumen        Int?
+  id_barang         Int
+  keterangan        String?       @db.VarChar
+  tanggal_mutasi    DateTime      @db.Date
+  is_selesai_mutasi Boolean?
+  id_cabang_asal    Int?
+  id_cabang_tujuan  Int?
+  dokumen           dokumen?      @relation(fields: [id_dokumen], references: [id], onDelete: Cascade, map: "dokumen_enrollment_fk")
+  barang            barang        @relation(fields: [id_barang], references: [id], onDelete: Cascade, map: "mutasi_barang_fk")
+}
+
+model dokumen {
+  id           Int      @id(map: "dokumen_id") @default(autoincrement())
+  nama_dokumen String   @db.VarChar
+  status       String?  @db.VarChar
+  mutasi       mutasi[]
+}
+
+model fungsi_ruangan {
+  id             Int       @id @default(autoincrement())
+  fungsi_ruangan String    @db.VarChar(255)
+  keterangan     String?   @db.VarChar(255)
+  ruangan        ruangan[]
+}
+
+enum mutation_type {
+  JUAL
+  RETUR
+  MUTASI
+}
+
+enum pengadaan_type {
+  MUTASI
+  MUTASI_UNIT
+  PENGADAAN_CABANG
+  PENGADAAN_PUSAT
+}
+
+enum pengguna_type {
+  KARYAWAN
+  SISWA
+  PENGAJAR
+  SISWA_PENGAJAR
+}
