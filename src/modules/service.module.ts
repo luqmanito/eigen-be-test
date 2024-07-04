@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { BarangModule } from './barang/barang.module';
-import { EnrollmentModule } from './enrollment/enrollment.module';
-import { mutasiModule } from './mutasi/mutasi.module';
+import { BooksModule } from './books/books.module';
+import { CirculationModule } from './circulation/circulation.module';
+import { MemberModule } from './member/member.module';
 
 @Module({
-  imports: [BarangModule, EnrollmentModule, mutasiModule],
+  imports: [BooksModule, MemberModule, CirculationModule],
 })
 export class ServiceModule {}

@@ -9,7 +9,7 @@ import {
 } from 'class-validator';
 import { SortOrder } from './request-response.dto';
 import { ApiProperty } from '@nestjs/swagger';
-import { mutation_type } from '@prisma/client';
+// import { mutation_type } from '@prisma/client';
 
 export class QueryParams {
   @ApiProperty({ required: false })
@@ -23,12 +23,6 @@ export class QueryParams {
   @IsOptional()
   @IsString()
   tgl_awal?: string = '';
-
-  @ApiProperty({ required: true, example: 'MUTASI' })
-  @Type(() => String)
-  @IsOptional()
-  @IsString()
-  type: mutation_type;
 
   @ApiProperty({ required: false })
   @Type(() => String)
@@ -91,6 +85,14 @@ export class QueryParams {
     return obj[key] === 'true' ? true : obj[key] === 'false' ? false : obj[key];
   })
   is_all_data?: boolean = false;
+
+  @ApiProperty({ required: false, example: false })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ obj, key }) => {
+    return obj[key] === 'true' ? true : obj[key] === 'false' ? false : obj[key];
+  })
+  is_borrowed?: boolean = false;
 
   @ApiProperty({ required: false, example: 'asc' })
   @IsEnum(SortOrder)
