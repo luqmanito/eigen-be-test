@@ -9,7 +9,6 @@ import {
 } from 'class-validator';
 import { SortOrder } from './request-response.dto';
 import { ApiProperty } from '@nestjs/swagger';
-// import { mutation_type } from '@prisma/client';
 
 export class QueryParams {
   @ApiProperty({ required: false })

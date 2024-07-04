@@ -37,7 +37,7 @@ export class CirculationService {
           }
 
           if (item?.stock <= 0) {
-            throw new CustomError(`Insufficient quantity`, 400);
+            throw new CustomError(`Books out of stock`, 400);
           }
 
           const check = await prisma.circulation.findMany({
@@ -98,7 +98,7 @@ export class CirculationService {
       }
 
       if (item?.stock <= 0) {
-        throw new CustomError(`Insufficient quantity`, 400);
+        throw new CustomError(`Books out of stock`, 400);
       }
 
       const check = await prisma.circulation.findMany({
