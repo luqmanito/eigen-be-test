@@ -42,9 +42,9 @@ export class MemberService {
 
     if (params.is_borrowed) {
       includeObject.circulation = {
-        include : {
-          books : {}
-        }
+        include: {
+          books: {},
+        },
       };
     }
 
@@ -60,13 +60,6 @@ export class MemberService {
         where: {
           AND: query,
         },
-        // include: {
-        //   circulation: {
-        //     include: {
-        //       books: {},
-        //     },
-        //   },
-        // },
         include: includeObject,
         orderBy: {
           [params.order_by]: params.sort,
