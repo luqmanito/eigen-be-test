@@ -29,7 +29,7 @@ export class CirculationDto {
 export class CirculationReturnDto {
   @ApiProperty({
     required: true,
-    example: 1,
+    example: 2,
     description: 'Input circulation_id ',
   })
   @Type(() => Number)
@@ -39,7 +39,7 @@ export class CirculationReturnDto {
 
   @ApiProperty({
     required: true,
-    example: 'Laskar Pelangi',
+    example: '2024-07-08T00:00:00.000Z',
     description: 'Input returned date',
   })
   @Type(() => String)
@@ -57,7 +57,7 @@ export class CirculationReturnDto {
   @IsInt()
   member_id: number;
 
-  @ApiProperty({ required: true, example: 1, description: 'Input books id' })
+  @ApiProperty({ required: true, example: 17, description: 'Input books id' })
   @Type(() => Number)
   @IsNotEmpty()
   @IsInt()

@@ -36,16 +36,6 @@ export class BooksService {
       });
     }
 
-    interface IncludeObject {
-      circulation?: object;
-    }
-
-    const includeObject: IncludeObject = {};
-
-    if (params.is_borrowed) {
-      includeObject.circulation = {};
-    }
-
     const [total_data, data] = await this.prisma.$transaction([
       this.prisma.books.count({
         where: {
@@ -58,7 +48,7 @@ export class BooksService {
         where: {
           AND: query,
         },
-        include: includeObject,
+        // include: includeObject,
         orderBy: {
           [params.order_by]: params.sort,
         },

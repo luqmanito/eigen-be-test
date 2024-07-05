@@ -10,108 +10,34 @@ export class CirculationService {
 
   async post(dto: CirculationDto) {
     const moment = require('moment-timezone');
-    const result = await this.prisma.$transaction(async (prisma) => {
-      const member = await prisma.member.findUnique({
-        where: {
-          id: dto.member_id,
-        },
+
+    const getMember = async (prisma) => {
+      return await prisma.member.findUnique({
+        where: { id: dto.member_id },
       });
+    };
 
-      let differenceInDays;
-      if (dto.date) {
-        const date1 = moment(dto.date);
-        const date2 = moment(member.is_penalized);
-        differenceInDays = date1.diff(date2, 'days');
-      }
-
-      if (member.is_penalized) {
-        if (differenceInDays && differenceInDays > 3) {
-          const item = await prisma.books.findUnique({
-            where: {
-              id: dto.books_id,
-            },
-          });
-
-          if (!item) {
-            throw new CustomError(`Books not found`, 404);
-          }
-
-          if (item?.stock <= 0) {
-            throw new CustomError(`Books out of stock`, 400);
-          }
-
-          const check = await prisma.circulation.findMany({
-            where: {
-              member_id: dto.member_id,
-              returned_at: null,
-            },
-          });
-
-          if (check.length >= 2) {
-            throw new CustomError(`Maximal 2 limit books reached`, 400);
-          }
-
-          const dateCreated = moment(dto.date);
-          const lend = await prisma.circulation.create({
-            data: {
-              books_id: dto.books_id,
-              member_id: dto.member_id,
-              created_at: dateCreated,
-            },
-          });
-
-          const update = await prisma.books.update({
-            where: {
-              id: dto.books_id,
-            },
-            data: {
-              stock: {
-                decrement: 1,
-              },
-            },
-          });
-
-          const updateMember = await prisma.member.update({
-            where: {
-              id: dto.member_id,
-            },
-            data: {
-              is_penalized: null,
-            },
-          });
-          return lend;
-        }
-        throw new CustomError(
-          `You are being penalized, please wait three days to lend a book`,
-          403,
-        );
-      }
-
-      const item = await prisma.books.findUnique({
-        where: {
-          id: dto.books_id,
-        },
+    const getBook = async (prisma) => {
+      const book = await prisma.books.findUnique({
+        where: { id: dto.books_id },
       });
+      if (!book) throw new CustomError('Books not found', 404);
+      if (book.stock <= 0) throw new CustomError('Books out of stock', 400);
+      return book;
+    };
 
-      if (!item) {
-        throw new CustomError(`Books not found`, 404);
-      }
-
-      if (item?.stock <= 0) {
-        throw new CustomError(`Books out of stock`, 400);
-      }
-
-      const check = await prisma.circulation.findMany({
+    const checkMemberCirculation = async (prisma) => {
+      const circulations = await prisma.circulation.findMany({
         where: {
           member_id: dto.member_id,
           returned_at: null,
         },
       });
+      if (circulations.length >= 2)
+        throw new CustomError('Maximal 2 limit books reached', 400);
+    };
 
-      if (check.length >= 2) {
-        throw new CustomError(`Maximal 2 limit books reached`, 400);
-      }
-
+    const createCirculationRecord = async (prisma) => {
       const dateCreated = moment(dto.date);
       const lend = await prisma.circulation.create({
         data: {
@@ -121,19 +47,49 @@ export class CirculationService {
         },
       });
 
-      const update = await prisma.books.update({
-        where: {
-          id: dto.books_id,
-        },
-        data: {
-          stock: {
-            decrement: 1,
-          },
-        },
+      await prisma.books.update({
+        where: { id: dto.books_id },
+        data: { stock: { decrement: 1 } },
       });
+
       return lend;
+    };
+
+    const handlePenalizedMember = async (prisma, member) => {
+      const date1 = moment(dto.date);
+      const date2 = moment(member.is_penalized);
+      const differenceInDays = date1.diff(date2, 'days');
+
+      if (differenceInDays > 3) {
+        await checkMemberCirculation(prisma);
+        const lend = await createCirculationRecord(prisma);
+
+        await prisma.member.update({
+          where: { id: dto.member_id },
+          data: { is_penalized: null },
+        });
+
+        return lend;
+      }
+
+      throw new CustomError(
+        'You are being penalized, please wait three days to lend a book',
+        403,
+      );
+    };
+
+    return await this.prisma.$transaction(async (prisma) => {
+      const member = await getMember(prisma);
+
+      if (member.is_penalized) {
+        return await handlePenalizedMember(prisma, member);
+      }
+
+      await getBook(prisma);
+      await checkMemberCirculation(prisma);
+
+      return await createCirculationRecord(prisma);
     });
-    return result;
   }
 
   async return(dto: CirculationReturnDto) {

@@ -34,6 +34,20 @@ export class MemberService {
       });
     }
 
+    interface IncludeObject {
+      circulation?: object;
+    }
+
+    const includeObject: IncludeObject = {};
+
+    if (params.is_borrowed) {
+      includeObject.circulation = {
+        include : {
+          books : {}
+        }
+      };
+    }
+
     const [total_data, data] = await this.prisma.$transaction([
       this.prisma.member.count({
         where: {
@@ -46,13 +60,14 @@ export class MemberService {
         where: {
           AND: query,
         },
-        include: {
-          circulation: {
-            include: {
-              books: {},
-            },
-          },
-        },
+        // include: {
+        //   circulation: {
+        //     include: {
+        //       books: {},
+        //     },
+        //   },
+        // },
+        include: includeObject,
         orderBy: {
           [params.order_by]: params.sort,
         },

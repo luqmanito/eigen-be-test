@@ -11,73 +11,42 @@ import { SortOrder } from './request-response.dto';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class QueryParams {
-  @ApiProperty({ required: false })
+  @ApiProperty({
+    required: false,
+    description: 'input search keyword',
+  })
   @Type(() => String)
   @IsOptional()
   @IsString()
   keyword?: string = '';
 
-  @ApiProperty({ required: false })
-  @Type(() => String)
-  @IsOptional()
-  @IsString()
-  tgl_awal?: string = '';
-
-  @ApiProperty({ required: false })
-  @Type(() => String)
-  @IsOptional()
-  @IsString()
-  tgl_akhir?: string = '';
-
-  @ApiProperty({ required: false, example: 1 })
+  @ApiProperty({
+    required: false,
+    example: 1,
+    description: 'input page number',
+  })
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @IsOptional()
   page?: number = 1;
 
-  @ApiProperty({ required: false, example: 10 })
+  @ApiProperty({
+    required: false,
+    example: 10,
+    description: 'input per_page shown',
+  })
   @Type(() => Number)
   @IsInt()
   @Min(10)
   @IsOptional()
   per_page?: number = 10;
 
-  @ApiProperty({ required: false, example: 1 })
-  @Type(() => Number)
-  @IsInt()
-  @IsOptional()
-  kategori_id?: number;
-
-  @ApiProperty({ required: false, example: 1 })
-  @Type(() => Number)
-  @IsInt()
-  @IsOptional()
-  cabang_id?: number;
-
-  @ApiProperty({ required: false, example: ['4,5'] })
-  @Type(() => String)
-  @IsString()
-  @IsOptional()
-  barang_ids?: string;
-
-  @Type(() => String)
-  @IsString()
-  @IsOptional()
-  gedung_ids?: string;
-
-  @Type(() => String)
-  @IsString()
-  @IsOptional()
-  ruang_id?: string;
-
-  @ApiProperty({ required: false, example: 1 })
-  @Type(() => Number)
-  @IsInt()
-  @IsOptional()
-  gedung_id?: number;
-
-  @ApiProperty({ required: false, example: false })
+  @ApiProperty({
+    required: false,
+    example: false,
+    description: 'decide show all data or not',
+  })
   @IsOptional()
   @IsBoolean()
   @Transform(({ obj, key }) => {
@@ -85,7 +54,11 @@ export class QueryParams {
   })
   is_all_data?: boolean = false;
 
-  @ApiProperty({ required: false, example: false })
+  @ApiProperty({
+    required: false,
+    example: false,
+    description: 'decide to show borrowed book or not',
+  })
   @IsOptional()
   @IsBoolean()
   @Transform(({ obj, key }) => {
@@ -93,12 +66,20 @@ export class QueryParams {
   })
   is_borrowed?: boolean = false;
 
-  @ApiProperty({ required: false, example: 'asc' })
+  @ApiProperty({
+    required: false,
+    example: 'asc',
+    description: 'sort data by asc or desc',
+  })
   @IsEnum(SortOrder)
   @IsOptional()
   sort?: SortOrder = SortOrder.ASC;
 
-  @ApiProperty({ required: false, example: 'id' })
+  @ApiProperty({
+    required: false,
+    example: 'id',
+    description: 'decide order by column ',
+  })
   @Type(() => String)
   @IsOptional()
   @IsString()
