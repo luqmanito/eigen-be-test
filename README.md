@@ -31,8 +31,9 @@
 ```bash
 $ npm install
 ```
+## Database Migration
 
-```database migration
+```bash
 $ npx prisma db push
 ```
 
