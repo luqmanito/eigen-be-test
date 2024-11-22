@@ -32,6 +32,10 @@
 $ npm install
 ```
 
+```database migration
+$ npx prisma db push
+```
+
 ## Running the app
 
 ```bash
