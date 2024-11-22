@@ -13,7 +13,11 @@ export class BooksDto {
   @IsNotEmpty()
   title: string;
 
-  @ApiProperty({ required: true, example: 'Dede', description: 'Input book author' })
+  @ApiProperty({
+    required: true,
+    example: 'Dede',
+    description: 'Input book author',
+  })
   @Type(() => String)
   @IsString()
   @IsNotEmpty()
@@ -29,11 +33,56 @@ export class BooksDto {
   @IsNotEmpty()
   stock: number;
 
-  @ApiProperty({ required: false, example: 'NRN-5', description: 'Input book code' })
+  @ApiProperty({
+    required: false,
+    example: 'NRN-5',
+    description: 'Input book code',
+  })
   @Type(() => String)
   @IsOptional()
   @IsString()
   code: string;
+
+  @ApiProperty({
+    required: false,
+    example: 'Active',
+    description: 'Input books status',
+  })
+  @Type(() => String)
+  @IsOptional()
+  @IsString()
+  status?: string;
+}
+export class UpdateBooksDto {
+  @ApiProperty({
+    required: false,
+    example: 'Laskar Pelangi',
+    description: 'Input book title',
+  })
+  @Type(() => String)
+  @IsString()
+  @IsOptional()
+  title?: string;
+
+  @ApiProperty({
+    required: false,
+    example: 'Dede',
+    description: 'Input book author',
+  })
+  @Type(() => String)
+  @IsString()
+  @IsOptional()
+  author?: string;
+
+  @ApiProperty({
+    required: true,
+    example: 1,
+    description: 'Input book quantity',
+  })
+  @Type(() => Number)
+  @IsInt()
+  @IsNotEmpty()
+  stock: number;
 
   @ApiProperty({
     required: false,
