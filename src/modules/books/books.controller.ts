@@ -1,7 +1,21 @@
-import { Body, Controller, Get, HttpStatus, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  SetMetadata,
+  UseGuards,
+} from '@nestjs/common';
 import { BooksService } from './books.service';
 import { BooksDto, QueryParams, SUCCESS_STATUS } from 'src/dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { RolesGuard } from 'src/utils/roles.guard';
+import { JwtAuthGuard } from 'src/utils/jwt-auth.guard';
 
 @Controller('books')
 @ApiTags('Books')
@@ -9,6 +23,8 @@ export class BooksController {
   constructor(private readonly booksService: BooksService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @SetMetadata('roles', ['admin'])
   @ApiOperation({
     summary: 'Input Book',
     description: 'Input Barang ke Unit',
@@ -22,6 +38,50 @@ export class BooksController {
           code: HttpStatus.CREATED,
           status: SUCCESS_STATUS,
           message: 'success post books',
+        },
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Patch(':id')
+  @UseGuards(RolesGuard)
+  @SetMetadata('role', ['admin', 'editor'])
+  @ApiOperation({
+    summary: 'Update Book',
+    description: 'Update Book',
+  })
+  async update(@Param('id') id: string, @Body() dto: BooksDto) {
+    try {
+      const data = await this.booksService.update(+id, dto);
+      return {
+        data: data,
+        _meta: {
+          code: HttpStatus.OK,
+          status: SUCCESS_STATUS,
+          message: 'success update books',
+        },
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Delete(':id')
+  @ApiOperation({
+    summary: 'Delete Book',
+    description: 'Delete Book',
+  })
+  async delete(@Param('id') id: string) {
+    try {
+      const data = await this.booksService.delete(+id);
+      return {
+        data: data,
+        _meta: {
+          code: HttpStatus.OK,
+          status: SUCCESS_STATUS,
+          message: 'success delete books',
         },
       };
     } catch (error) {

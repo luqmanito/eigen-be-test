@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { BooksDto, QueryParams } from 'src/dto';
+import { BooksDto, QueryParams, UpdateBooksDto } from 'src/dto';
 
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -23,6 +23,37 @@ export class BooksService {
     return result;
   }
 
+  async update(id: number, dto: UpdateBooksDto) {
+    const result = await this.prisma.$transaction(async (prisma) => {
+      const data = await prisma.books.update({
+        where: {
+          id: id,
+        },
+        data: {
+          title: dto.title,
+          author: dto.author,
+          stock: dto.stock,
+        },
+      });
+
+      return data;
+    });
+    return result;
+  }
+
+  async delete(id: number) {
+    const result = await this.prisma.$transaction(async (prisma) => {
+      const data = await prisma.books.delete({
+        where: {
+          id: id,
+        },
+      });
+
+      return data;
+    });
+    return result;
+  }
+
   async get(params: QueryParams) {
     const skip = params.page ? (params.page - 1) * params.per_page : 0;
     const query = [];
@@ -36,7 +67,7 @@ export class BooksService {
       });
     }
 
-    const [total_data, data] = await this.prisma.$transaction([
+    const [total_data, data] = await Promise.all([
       this.prisma.books.count({
         where: {
           AND: query,
@@ -48,7 +79,6 @@ export class BooksService {
         where: {
           AND: query,
         },
-        // include: includeObject,
         orderBy: {
           [params.order_by]: params.sort,
         },

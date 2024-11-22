@@ -19,6 +19,17 @@ model books {
   circulation circulation[]
 }
 
+model user {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique
+  password   String
+  role       String   @default("member")
+  member_id  Int?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  member     member?  @relation(fields: [member_id], references: [id])
+}
+
 model member {
   id           Int           @id(map: "member_pk") @default(autoincrement())
   code         String?       @db.VarChar
@@ -28,6 +39,7 @@ model member {
   created_at   DateTime?     @default(now()) @db.Timestamp(6)
   is_penalized DateTime?     @db.Date
   circulation  circulation[]
+  user         user[]
 }
 
 model circulation {
